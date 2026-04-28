@@ -113,7 +113,10 @@ def plot_metric(histories, metric, filename):
 
 
 def print_summary(results):
-    header = f"{'Model':<14}{'Test Acc':>12}{'Test Loss':>12}{'Time (s)':>12}{'Size (MB)':>12}"
+    header = (
+        f"{'Model':<14}{'Test Accuracy':>14}{'Test Loss':>12}"
+        f"{'Time (s)':>12}{'Size (MB)':>12}"
+    )
     print("\nModel Comparison")
     print(header)
     print("-" * len(header))
@@ -180,7 +183,8 @@ def main():
     epochs = int(os.environ.get("EPOCHS", "10"))
     if epochs < MIN_ALLOWED_EPOCHS or epochs > MAX_ALLOWED_EPOCHS:
         raise ValueError(
-            f"EPOCHS must be between {MIN_ALLOWED_EPOCHS} and {MAX_ALLOWED_EPOCHS}."
+            f"EPOCHS must be between {MIN_ALLOWED_EPOCHS} and {MAX_ALLOWED_EPOCHS} "
+            "(inclusive)."
         )
     batch_size = int(os.environ.get("BATCH_SIZE", "64"))
 

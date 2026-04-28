@@ -11,8 +11,8 @@ from tensorflow.keras.applications.resnet import preprocess_input as resnet_prep
 
 VAL_SPLIT = 0.1
 SHUFFLE_BUFFER = 10000
-MIN_EPOCHS = 10
-MAX_EPOCHS = 20
+MIN_ALLOWED_EPOCHS = 10
+MAX_ALLOWED_EPOCHS = 20
 
 
 def load_cifar10():
@@ -140,7 +140,11 @@ def generate_observations(results):
             "InceptionV3 achieved higher accuracy, likely because its multi-scale filters capture "
             "features at different receptive fields that suit CIFAR-10 images."
         )
-    if resnet["training_time_sec"] >= inception["training_time_sec"]:
+    time_diff = abs(resnet["training_time_sec"] - inception["training_time_sec"])
+    time_threshold = 0.05 * max(resnet["training_time_sec"], inception["training_time_sec"])
+    if time_diff <= time_threshold:
+        time_line = "Training time was similar for both models at this epoch budget."
+    elif resnet["training_time_sec"] >= inception["training_time_sec"]:
         time_line = "ResNet50 took longer to train, which is expected with its deeper architecture."
     else:
         time_line = "InceptionV3 took longer to train, likely due to its larger input resolution."
@@ -151,7 +155,7 @@ def generate_observations(results):
     return "\n".join([accuracy_line, time_line, size_line])
 
 
-def run_experiment(name, model_builder, preprocess_fn, image_size, datasets, epochs, batch_size, num_classes):
+def run_experiment(model_builder, preprocess_fn, image_size, datasets, epochs, batch_size, num_classes):
     (x_train, y_train), (x_val, y_val), (x_test, y_test) = datasets
     train_ds = build_dataset(x_train, y_train, image_size, preprocess_fn, batch_size, training=True)
     val_ds = build_dataset(x_val, y_val, image_size, preprocess_fn, batch_size, training=False)
@@ -174,8 +178,10 @@ def run_experiment(name, model_builder, preprocess_fn, image_size, datasets, epo
 def main():
     tf.keras.utils.set_random_seed(42)
     epochs = int(os.environ.get("EPOCHS", "10"))
-    if epochs < MIN_EPOCHS or epochs > MAX_EPOCHS:
-        raise ValueError(f"EPOCHS must be between {MIN_EPOCHS} and {MAX_EPOCHS}.")
+    if epochs < MIN_ALLOWED_EPOCHS or epochs > MAX_ALLOWED_EPOCHS:
+        raise ValueError(
+            f"EPOCHS must be between {MIN_ALLOWED_EPOCHS} and {MAX_ALLOWED_EPOCHS}."
+        )
     batch_size = int(os.environ.get("BATCH_SIZE", "64"))
 
     datasets = load_cifar10()
@@ -185,7 +191,6 @@ def main():
     histories = {}
 
     resnet_metrics, resnet_history = run_experiment(
-        "ResNet50",
         build_resnet50,
         resnet_preprocess,
         (224, 224),
@@ -198,7 +203,6 @@ def main():
     histories["ResNet50"] = resnet_history
 
     inception_metrics, inception_history = run_experiment(
-        "InceptionV3",
         build_inception_v3,
         inception_preprocess,
         (299, 299),

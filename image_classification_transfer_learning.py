@@ -1,3 +1,4 @@
+import math
 import os
 import tempfile
 import time
@@ -134,7 +135,14 @@ def print_summary(results):
 def generate_observations(results):
     resnet = results["ResNet50"]
     inception = results["InceptionV3"]
-    if resnet["test_accuracy"] >= inception["test_accuracy"]:
+    if math.isclose(
+        resnet["test_accuracy"],
+        inception["test_accuracy"],
+        rel_tol=1e-4,
+        abs_tol=1e-4,
+    ):
+        accuracy_line = "Both models achieved similar accuracy on this run."
+    elif resnet["test_accuracy"] > inception["test_accuracy"]:
         accuracy_line = (
             "ResNet50 achieved higher accuracy, possibly because residual connections make optimization "
             "easier and help deeper features transfer effectively."
@@ -150,11 +158,18 @@ def generate_observations(results):
     )
     if time_diff <= time_threshold:
         time_line = "Training time was similar for both models at this epoch budget."
-    elif resnet["training_time_sec"] >= inception["training_time_sec"]:
+    elif resnet["training_time_sec"] > inception["training_time_sec"]:
         time_line = "ResNet50 took longer to train, which is expected with its deeper architecture."
     else:
         time_line = "InceptionV3 took longer to train, likely due to its larger input resolution."
-    if resnet["model_size_mb"] >= inception["model_size_mb"]:
+    if math.isclose(
+        resnet["model_size_mb"],
+        inception["model_size_mb"],
+        rel_tol=1e-4,
+        abs_tol=1e-4,
+    ):
+        size_line = "Both models have a similar model size."
+    elif resnet["model_size_mb"] > inception["model_size_mb"]:
         size_line = "ResNet50 has a larger model size, reflecting more parameters."
     else:
         size_line = "InceptionV3 has a larger model size, reflecting its wider inception blocks."

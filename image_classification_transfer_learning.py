@@ -13,6 +13,7 @@ VAL_SPLIT = 0.1
 SHUFFLE_BUFFER = 10000
 MIN_ALLOWED_EPOCHS = 10
 MAX_ALLOWED_EPOCHS = 20
+TIME_DIFFERENCE_THRESHOLD = 0.05
 
 
 def load_cifar10():
@@ -144,7 +145,9 @@ def generate_observations(results):
             "features at different receptive fields that suit CIFAR-10 images."
         )
     time_diff = abs(resnet["training_time_sec"] - inception["training_time_sec"])
-    time_threshold = 0.05 * max(resnet["training_time_sec"], inception["training_time_sec"])
+    time_threshold = TIME_DIFFERENCE_THRESHOLD * max(
+        resnet["training_time_sec"], inception["training_time_sec"]
+    )
     if time_diff <= time_threshold:
         time_line = "Training time was similar for both models at this epoch budget."
     elif resnet["training_time_sec"] >= inception["training_time_sec"]:

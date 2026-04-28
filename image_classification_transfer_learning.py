@@ -190,6 +190,8 @@ def main():
             "(inclusive)."
         )
     batch_size = int(os.environ.get("BATCH_SIZE", "64"))
+    if batch_size <= 0:
+        raise ValueError("BATCH_SIZE must be a positive integer.")
 
     datasets = load_cifar10()
     num_classes = len(np.unique(datasets[0][1]))

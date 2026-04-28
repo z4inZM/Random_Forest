@@ -9,13 +9,17 @@ from tensorflow.keras.applications import InceptionV3, ResNet50
 from tensorflow.keras.applications.inception_v3 import preprocess_input as inception_preprocess
 from tensorflow.keras.applications.resnet import preprocess_input as resnet_preprocess
 
+VAL_SPLIT = 0.1
+SHUFFLE_BUFFER = 10000
+MIN_EPOCHS = 10
+MAX_EPOCHS = 20
+
 
 def load_cifar10():
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
     y_train = y_train.squeeze()
     y_test = y_test.squeeze()
-    val_split = 0.1
-    split_index = int((1 - val_split) * len(x_train))
+    split_index = int((1 - VAL_SPLIT) * len(x_train))
     x_val, y_val = x_train[split_index:], y_train[split_index:]
     x_train, y_train = x_train[:split_index], y_train[:split_index]
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
@@ -24,7 +28,7 @@ def load_cifar10():
 def build_dataset(images, labels, image_size, preprocess_fn, batch_size, training=False):
     dataset = tf.data.Dataset.from_tensor_slices((images, labels))
     if training:
-        dataset = dataset.shuffle(min(len(images), 10000))
+        dataset = dataset.shuffle(min(len(images), SHUFFLE_BUFFER))
 
     def _preprocess(image, label):
         image = tf.cast(image, tf.float32)
@@ -170,8 +174,8 @@ def run_experiment(name, model_builder, preprocess_fn, image_size, datasets, epo
 def main():
     tf.keras.utils.set_random_seed(42)
     epochs = int(os.environ.get("EPOCHS", "10"))
-    if epochs < 10 or epochs > 20:
-        raise ValueError("EPOCHS must be between 10 and 20.")
+    if epochs < MIN_EPOCHS or epochs > MAX_EPOCHS:
+        raise ValueError(f"EPOCHS must be between {MIN_EPOCHS} and {MAX_EPOCHS}.")
     batch_size = int(os.environ.get("BATCH_SIZE", "64"))
 
     datasets = load_cifar10()

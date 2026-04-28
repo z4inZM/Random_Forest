@@ -13,7 +13,7 @@ VAL_SPLIT = 0.1
 SHUFFLE_BUFFER = 10000
 MIN_ALLOWED_EPOCHS = 10
 MAX_ALLOWED_EPOCHS = 20
-TIME_DIFFERENCE_THRESHOLD = 0.05
+TIME_DIFFERENCE_THRESHOLD = 0.05  # Relative threshold to treat training times as similar.
 
 
 def load_cifar10():
@@ -136,12 +136,12 @@ def generate_observations(results):
     inception = results["InceptionV3"]
     if resnet["test_accuracy"] >= inception["test_accuracy"]:
         accuracy_line = (
-            "ResNet50 achieved higher accuracy, likely because residual connections make optimization "
+            "ResNet50 achieved higher accuracy, possibly because residual connections make optimization "
             "easier and help deeper features transfer effectively."
         )
     else:
         accuracy_line = (
-            "InceptionV3 achieved higher accuracy, likely because its multi-scale filters capture "
+            "InceptionV3 achieved higher accuracy, possibly because its multi-scale filters capture "
             "features at different receptive fields that suit CIFAR-10 images."
         )
     time_diff = abs(resnet["training_time_sec"] - inception["training_time_sec"])
